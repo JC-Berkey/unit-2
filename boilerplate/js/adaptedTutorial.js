@@ -21,7 +21,7 @@ function createMap(){
 //function to retrieve the data and place it on the map
 function getData(){
     //load the data
-    fetch("data/GDP.geojson")
+    fetch("data/MegaCities.geojson")
     .then(function(json){            
         //create marker options
         var geojsonMarkerOptions = {
