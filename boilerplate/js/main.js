@@ -42,7 +42,7 @@ function calcMinValue(data){
 //calculate the radius of each proportional symbol
 function calcPropRadius(attValue) {
     //constant factor adjusts symbol sizes evenly
-    var minRadius = 0.8;
+    var minRadius = 0.5;
     //Flannery Appearance Compensation formula
     var radius = 1.0083 * Math.pow(attValue/minValue,0.5715) * minRadius
 
@@ -70,8 +70,8 @@ function pointToLayer(feature, latlng, attributes){
 
     //create circle marker layer
     var layer = L.circleMarker(latlng, options);
-
-    var popupContent = "<p><b>Country:</b> " + feature.properties.Country + "</p>";
+console.log(feature.properties);
+    var popupContent = "<p><b>Country:</b> " + feature.properties.CountryName + "</p>";
 
     //add formatted attribute to popup content string
     var year = attribute.split(" ")[0];
@@ -107,7 +107,7 @@ function updatePropSymbols(attribute){
             layer.setRadius(radius);
 
             //add city to popup content string
-            var popupContent = "<p><b>Country:</b> " + props.Country + "</p>";
+            var popupContent = "<p><b>Country:</b> " + props.CountryName + "</p>";
 
             //add formatted attribute to panel content string
             var year = attribute.split(" ")[0];
@@ -170,7 +170,7 @@ function processData(data){
 
     //properties of the first feature in the dataset
     var properties = data.features[0].properties;
-
+    console.log("pD",properties);
     //push each attribute name into attributes array
     for (var attribute in properties){
         //only take attributes with population values
