@@ -23,12 +23,12 @@ function createMap(){
 function calcMinValue(data){
     //create empty array to store all data values
     var allValues = [];
-    //loop through each city
+    //loop through each country
     for(var city of data.features){
         //loop through each year
-        for(var year = 1985; year <= 2015; year+=5){
-              //get population for current year
-              var value = city.properties["Pop_"+ String(year)];
+        for(var year = 2016; year <= 2022; year+=1){
+              //get GDP for current year
+              var value = city.properties[String(year) + " [YR" + String(year) + "]"];
               //add value to array
               allValues.push(value);
         }
@@ -42,20 +42,20 @@ function calcMinValue(data){
 //calculate the radius of each proportional symbol
 function calcPropRadius(attValue) {
     //constant factor adjusts symbol sizes evenly
-    var minRadius = 5;
+    var minRadius = 0.8;
     //Flannery Appearance Compensation formula
     var radius = 1.0083 * Math.pow(attValue/minValue,0.5715) * minRadius
 
     return radius;
 };
 //function to convert markers to circle markers
-function pointToLayer(feature, latlng){
+function pointToLayer(feature, latlng, attributes){
     //Determine which attribute to visualize with proportional symbols
-    var attribute = "Pop_2015";
+    var attribute = attributes[0];
 
     //create marker options
     var options = {
-        fillColor: "#ff7800",
+        fillColor: "#955251",
         color: "#000",
         weight: 1,
         opacity: 1,
@@ -71,8 +71,11 @@ function pointToLayer(feature, latlng){
     //create circle marker layer
     var layer = L.circleMarker(latlng, options);
 
-    //build popup content string
-    var popupContent = "<p><b>City:</b> " + feature.properties.City + "</p><p><b>" + attribute + ":</b> " + feature.properties[attribute] + "</p>";
+    var popupContent = "<p><b>Country:</b> " + feature.properties.Country + "</p>";
+
+    //add formatted attribute to popup content string
+    var year = attribute.split(" ")[0];
+    popupContent += "<p><b>GDP in " + year + ":</b> $" + feature.properties[attribute] + "</p>";
 
     //bind the popup to the circle marker
     layer.bindPopup(popupContent, {
@@ -84,15 +87,40 @@ function pointToLayer(feature, latlng){
 };
 
 //Add circle markers for point features to the map
-function createPropSymbols(data){
+function createPropSymbols(data, attributes){
     //create a Leaflet GeoJSON layer and add it to the map
     L.geoJson(data, {
-        pointToLayer: pointToLayer
+        pointToLayer: function(feature, latlng){
+            return pointToLayer(feature, latlng, attributes);
+        }
     }).addTo(map);
 };
 
+function updatePropSymbols(attribute){
+    map.eachLayer(function(layer){
+        if (layer.feature && layer.feature.properties[attribute]){
+            //access feature properties
+            var props = layer.feature.properties;
 
-function createSequenceControls(){
+            //update each feature's radius based on new attribute values
+            var radius = calcPropRadius(props[attribute]);
+            layer.setRadius(radius);
+
+            //add city to popup content string
+            var popupContent = "<p><b>Country:</b> " + props.Country + "</p>";
+
+            //add formatted attribute to panel content string
+            var year = attribute.split(" ")[0];
+            popupContent += "<p><b>GDP in " + year + ":</b> $" + props[attribute] + "</p>";
+
+            //update popup content            
+            popup = layer.getPopup();            
+            popup.setContent(popupContent).update();
+        };
+    });
+};
+
+function createSequenceControls(attributes){
     //create range input element (slider)
     var slider = "<input class='range-slider' type='range'></input>";
     document.querySelector("#panel").insertAdjacentHTML('beforeend',slider);
@@ -105,22 +133,68 @@ function createSequenceControls(){
 
     document.querySelector('#panel').insertAdjacentHTML('beforeend','<button class="step" id="reverse"></button>');
     document.querySelector('#panel').insertAdjacentHTML('beforeend','<button class="step" id="forward"></button>');
-    document.querySelector('#reverse').insertAdjacentHTML('beforeend',"<img src='img/reverse.png'>")
-    document.querySelector('#forward').insertAdjacentHTML('beforeend',"<img src='img/forward.png'>")
+    document.querySelector('#reverse').insertAdjacentHTML('beforeend',"<img src='img/bArrow.png'>")
+    document.querySelector('#forward').insertAdjacentHTML('beforeend',"<img src='img/fArrow.png'>")
+
+    document.querySelector('.range-slider').addEventListener('input', function(){
+        //Step 6: get the new index value
+        var index = this.value;
+        updatePropSymbols(attributes[index]);
+    });
+
+    document.querySelectorAll('.step').forEach(function(step){
+        step.addEventListener("click", function(){
+            var index = document.querySelector('.range-slider').value;
+
+            //Step 6: increment or decrement depending on button clicked
+            if (step.id == 'forward'){
+                index++;
+                //Step 7: if past the last attribute, wrap around to first attribute
+                index = index > 6 ? 0 : index;
+            } else if (step.id == 'reverse'){
+                index--;
+                //Step 7: if past the first attribute, wrap around to last attribute
+                index = index < 0 ? 6 : index;
+            };
+
+            //Step 8: update slider
+            document.querySelector('.range-slider').value = index;
+            updatePropSymbols(attributes[index]);
+        })
+    })
+};
+
+function processData(data){
+    //empty array to hold attributes
+    var attributes = [];
+
+    //properties of the first feature in the dataset
+    var properties = data.features[0].properties;
+
+    //push each attribute name into attributes array
+    for (var attribute in properties){
+        //only take attributes with population values
+        if (attribute.indexOf("[YR") > -1){
+            attributes.push(attribute);
+        };
+    };
+
+    return attributes;
 };
 
 //Import GeoJSON data
 function getData(map){
     //load the data
-    fetch("data/MegaCities.geojson")
+    fetch("data/GDP.geojson")
         .then(function(response){
             return response.json();
         })
         .then(function(json){
+            var attributes = processData(json);
             minValue = calcMinValue(json);
             //call function to create proportional symbols
-            createPropSymbols(json);
-            createSequenceControls();
+            createPropSymbols(json, attributes);
+            createSequenceControls(attributes);
         })
 };
 
