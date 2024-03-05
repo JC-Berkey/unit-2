@@ -28,7 +28,7 @@ function calcMinValue(data){
         //loop through each year
         for(var year = 2016; year <= 2022; year+=1){
               //get GDP for current year
-              var value = city.properties[String(year) + " [YR" + String(year) + "]"];
+              var value = city.properties[String(year)];
               //add value to array
               allValues.push(value);
         }
@@ -42,7 +42,7 @@ function calcMinValue(data){
 //calculate the radius of each proportional symbol
 function calcPropRadius(attValue) {
     //constant factor adjusts symbol sizes evenly
-    var minRadius = 0.5;
+    var minRadius = 10;
     //Flannery Appearance Compensation formula
     var radius = 1.0083 * Math.pow(attValue/minValue,0.5715) * minRadius
 
@@ -71,11 +71,11 @@ function pointToLayer(feature, latlng, attributes){
     //create circle marker layer
     var layer = L.circleMarker(latlng, options);
 console.log(feature.properties);
-    var popupContent = "<p><b>Country:</b> " + feature.properties.CountryName + "</p>";
+    var popupContent = "<p><b>Country:</b> " + feature.properties.Country + "</p>";
 
     //add formatted attribute to popup content string
     var year = attribute.split(" ")[0];
-    popupContent += "<p><b>GDP in " + year + ":</b> $" + feature.properties[attribute] + "</p>";
+    popupContent += "<p><b>Percent pop 65+ in " + year + ":</b> " + feature.properties[attribute] + "</p>";
 
     //bind the popup to the circle marker
     layer.bindPopup(popupContent, {
@@ -107,11 +107,11 @@ function updatePropSymbols(attribute){
             layer.setRadius(radius);
 
             //add city to popup content string
-            var popupContent = "<p><b>Country:</b> " + props.CountryName + "</p>";
+            var popupContent = "<p><b>Country:</b> " + props.Country + "</p>";
 
             //add formatted attribute to panel content string
             var year = attribute.split(" ")[0];
-            popupContent += "<p><b>GDP in " + year + ":</b> $" + props[attribute] + "</p>";
+            popupContent += "<p><b>Percent pop 65+ in " + year + ":</b> " + props[attribute] + "</p>";
 
             //update popup content            
             popup = layer.getPopup();            
@@ -174,7 +174,7 @@ function processData(data){
     //push each attribute name into attributes array
     for (var attribute in properties){
         //only take attributes with population values
-        if (attribute.indexOf("[YR") > -1){
+        if (attribute.indexOf("201") > -1){
             attributes.push(attribute);
         };
     };
@@ -185,7 +185,7 @@ function processData(data){
 //Import GeoJSON data
 function getData(map){
     //load the data
-    fetch("data/GDP.geojson")
+    fetch("data/AgingPop.geojson")
         .then(function(response){
             return response.json();
         })
