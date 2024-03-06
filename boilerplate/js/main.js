@@ -50,20 +50,12 @@ function calcPropRadius(attValue) {
     return radius;
 };
 
-function PopupContent(properties, attribute){
-    this.properties = properties;
-    this.attribute = attribute;
-    this.year = attribute.split("_")[1];
-    this.gdp = this.properties[attribute];
-    this.formatted = "<p><b>Country:</b> " + this.properties.Country + "</p><p><b>Percent pop 65+ in " + this.year + ":</b> " + this.gdp + "</p>";
-};
-
 function createPopupContent(properties, attribute){
     //add city to popup content string
     var popupContent = "<p><b>Country:</b> " + properties.Country + "</p>";
 
     //add formatted attribute to panel content string
-    var year = attribute.split("_")[1];
+    var year = attribute.split("_")[0];
     popupContent += "<p><b>Percent pop 65+ in " + year + ":</b> " + properties[attribute] + "</p>";
 
     return popupContent;
@@ -75,9 +67,9 @@ function calcStats(data){
     //loop through each city
     for(var city of data.features){
         //loop through each year
-        for(var year = 1985; year <= 2015; year+=5){
+        for(var year = 2016; year <= 2022; year+=1){
               //get population for current year
-              var value = city.properties["Pop_"+ String(year)];
+              var value = city.properties[String(year)];
               //add value to array
               allValues.push(value);
         }
@@ -178,7 +170,7 @@ function createSequenceControls(attributes){
 
     map.addControl(new SequenceControl());    // add listeners after adding control
 
-        //set slider attributes
+    //set slider attributes
     document.querySelector(".range-slider").max = 6;
     document.querySelector(".range-slider").min = 0;
     document.querySelector(".range-slider").value = 0;
@@ -211,7 +203,7 @@ function createSequenceControls(attributes){
         })
     })
 }
-
+// this function created the legend
 function createLegend(attributes){
     var LegendControl = L.Control.extend({
         options: {
@@ -267,7 +259,7 @@ function processData(data){
     //push each attribute name into attributes array
     for (var attribute in properties){
         //only take attributes with population values
-        if (attribute.indexOf("201") > -1){
+        if (attribute.indexOf("201") > -1 || attribute.indexOf('202') > -1){
             attributes.push(attribute);
         };
     };
