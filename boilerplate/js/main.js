@@ -8,13 +8,16 @@ function createMap(){
 
     //create the map
     map = L.map('map', {
-        center: [0, 0],
-        zoom: 3
+        center: [50, 10],
+        zoom: 4
     });
 
     //add OSM base tilelayer
-    L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>'
+    // L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    //     attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>'
+    // }).addTo(map);
+    L.tileLayer('http://services.arcgisonline.com/arcgis/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}.png', {
+
     }).addTo(map);
 
     //call getData function
@@ -43,7 +46,7 @@ function calcMinValue(data){
 //calculate the radius of each proportional symbol
 function calcPropRadius(attValue) {
     //constant factor adjusts symbol sizes evenly
-    var minRadius = 10;
+    var minRadius = 5;
     //Flannery Appearance Compensation formula
     var radius = 1.0083 * Math.pow(attValue/minValue,0.5715) * minRadius
 
@@ -56,7 +59,7 @@ function createPopupContent(properties, attribute){
 
     //add formatted attribute to panel content string
     var year = attribute.split("_")[0];
-    popupContent += "<p><b>Percent pop 65+ in " + year + ":</b> " + properties[attribute] + "%</p>";
+    popupContent += "<p><b>Percent Military Expenditure " + year + ":</b> " + properties[attribute] + "%</p>";
 
     return popupContent;
 };
@@ -80,7 +83,6 @@ function calcStats(data){
     //calculate meanValue
     var sum = allValues.reduce(function(a, b){return a+b;});
     dataStats.mean = sum/ allValues.length;
-    console.log("here",dataStats);
 }   
 
 //function to convert markers to circle markers
@@ -215,7 +217,7 @@ function createLegend(attributes){
             // create the control container with a particular class name
             var container = L.DomUtil.create('div', 'legend-control-container');
 
-            container.innerHTML = '<p class="temporalLegend"><h3>Percent pop 65+ in <span class="year">2016</span></h3></p>';
+            container.innerHTML = '<p class="temporalLegend"><h3>Percent Military Expenditure in <span class="year">2016</span></h3></p>';
 
             //start attribute legend svg string
             var svg = '<svg id="attribute-legend" width="160px" height="60px">';
@@ -228,17 +230,14 @@ function createLegend(attributes){
                 //assign the r and cy attributes  
                 
                 var radius = calcPropRadius(dataStats[circles[i]]);  
-                console.log(dataStats);
-                console.log(circles[i]);
-                console.log(dataStats[circles[i]]);
 
                 var cy = 59 - radius;  
                 //circle string  
-                svg += '<circle class="legend-circle" id="' + circles[i] + '" r="' + radius + '"cy="' + cy + '" fill="#F47821" fill-opacity="0.8" stroke="#000000" cx="30"/>'; 
+                svg += '<circle class="legend-circle" id="' + circles[i] + '" r="' + radius + '"cy="' + cy + '" fill="#955251" fill-opacity="0.8" stroke="#000000" cx="30"/>'; 
                 //evenly space out labels            
                 var textY = i * 20 + 20;            
                 //text string            
-                svg += '<text id="' + circles[i] + '-text" x="65" y="' + textY + '">' + Math.round(dataStats[circles[i]]*100)/100 + " people" + '</text>';
+                svg += '<text id="' + circles[i] + '-text" x="65" y="' + textY + '">' + Math.round(dataStats[circles[i]]*100)/100 + "%" + '</text>';
             };
 
             //close svg string
@@ -275,7 +274,7 @@ function processData(data){
 //Import GeoJSON data
 function getData(map){
     //load the data
-    fetch("data/AgingPop.geojson")
+    fetch("data/MilitarySpending.geojson")
         .then(function(response){
             return response.json();
         })
