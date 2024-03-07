@@ -9,7 +9,7 @@ function createMap(){
     //create the map
     map = L.map('map', {
         center: [0, 0],
-        zoom: 2
+        zoom: 3
     });
 
     //add OSM base tilelayer
@@ -56,7 +56,7 @@ function createPopupContent(properties, attribute){
 
     //add formatted attribute to panel content string
     var year = attribute.split("_")[0];
-    popupContent += "<p><b>Percent pop 65+ in " + year + ":</b> " + properties[attribute] + "</p>";
+    popupContent += "<p><b>Percent pop 65+ in " + year + ":</b> " + properties[attribute] + "%</p>";
 
     return popupContent;
 };
@@ -80,6 +80,7 @@ function calcStats(data){
     //calculate meanValue
     var sum = allValues.reduce(function(a, b){return a+b;});
     dataStats.mean = sum/ allValues.length;
+    console.log("here",dataStats);
 }   
 
 //function to convert markers to circle markers
@@ -123,7 +124,7 @@ function createPropSymbols(data, attributes){
 };
 
 function updatePropSymbols(attribute){
-    var year = attribute.split("_")[1];
+    var year = attribute.split("_")[0];
     //update temporal legend
     document.querySelector("span.year").innerHTML = year;
     map.eachLayer(function(layer){
@@ -214,26 +215,30 @@ function createLegend(attributes){
             // create the control container with a particular class name
             var container = L.DomUtil.create('div', 'legend-control-container');
 
-            container.innerHTML = '<p class="temporalLegend">Percent pop 65+ in <span class="year">2016</span></p>';
+            container.innerHTML = '<p class="temporalLegend"><h3>Percent pop 65+ in <span class="year">2016</span></h3></p>';
 
-            //Step 1: start attribute legend svg string
-            var svg = '<svg id="attribute-legend" width="130px" height="130px">';
+            //start attribute legend svg string
+            var svg = '<svg id="attribute-legend" width="160px" height="60px">';
 
             //array of circle names to base loop on
             var circles = ["max", "mean", "min"];
 
-            //Step 2: loop to add each circle and text to svg string
+            //loop to add each circle and text to svg string
             for (var i=0; i<circles.length; i++){
-                //Step 3: assign the r and cy attributes  
+                //assign the r and cy attributes  
+                
                 var radius = calcPropRadius(dataStats[circles[i]]);  
-                var cy = 130 - radius;  
-            //circle string  
-            svg += '<circle class="legend-circle" id="' + circles[i] + '" r="' + radius + '"cy="' + cy + '" fill="#F47821" fill-opacity="0.8" stroke="#000000" cx="65"/>'; 
-            //evenly space out labels            
-            var textY = i * 20 + 20;            
+                console.log(dataStats);
+                console.log(circles[i]);
+                console.log(dataStats[circles[i]]);
 
-            //text string            
-            svg += '<text id="' + circles[i] + '-text" x="65" y="' + textY + '">' + Math.round(dataStats[circles[i]]*100)/100 + " million" + '</text>';
+                var cy = 59 - radius;  
+                //circle string  
+                svg += '<circle class="legend-circle" id="' + circles[i] + '" r="' + radius + '"cy="' + cy + '" fill="#F47821" fill-opacity="0.8" stroke="#000000" cx="30"/>'; 
+                //evenly space out labels            
+                var textY = i * 20 + 20;            
+                //text string            
+                svg += '<text id="' + circles[i] + '-text" x="65" y="' + textY + '">' + Math.round(dataStats[circles[i]]*100)/100 + " people" + '</text>';
             };
 
             //close svg string
@@ -255,7 +260,7 @@ function processData(data){
 
     //properties of the first feature in the dataset
     var properties = data.features[0].properties;
-    console.log("pD",properties);
+    //console.log("pD",properties);
     //push each attribute name into attributes array
     for (var attribute in properties){
         //only take attributes with population values
@@ -278,10 +283,11 @@ function getData(map){
             var attributes = processData(json);
             minValue = calcMinValue(json);
             //call function to create proportional symbols
+            calcStats(json);
             createPropSymbols(json, attributes);
             createSequenceControls(attributes);
             createLegend(attributes);
-            calcStats(json); 
+             
         })
 };
 
